@@ -1,0 +1,1447 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>POS Cafe Responsive</title>
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Load html2pdf untuk Struk PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Load Marked.js dan DOMPurify untuk merender markdown AI secara aman -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a8a29e; }
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        
+        /* Fix for Safari iOS height issue */
+        .h-dvh { height: 100vh; height: 100dvh; }
+    </style>
+</head>
+<body class="bg-[#FDFBF7] flex flex-col md:flex-row h-dvh overflow-hidden text-[#332C27] font-sans">
+
+    <!-- AUTH LAYOUT -->
+    <div id="auth-layout" class="fixed inset-0 z-50 flex h-full w-full items-center justify-center bg-[#FDFBF7] p-4 hidden">
+        <!-- Login Box -->
+        <div id="login-box" class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md border border-stone-100 hidden">
+            <div class="text-center mb-6">
+                <h2 class="text-2xl font-bold text-stone-800"><i class="fas fa-coffee mr-2 text-[#D97757]"></i>POS CAFE</h2>
+                <p class="text-stone-500 text-sm mt-1">Silakan masuk untuk melanjutkan</p>
+            </div>
+            <form id="login-form" onsubmit="event.preventDefault(); doLogin();" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-stone-600 mb-1">Username</label>
+                    <input type="text" id="login-username" required class="w-full border border-stone-300 rounded-lg px-4 py-2 focus:ring-[#D97757] focus:border-[#D97757]">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-stone-600 mb-1">Password</label>
+                    <div class="relative">
+                        <input type="password" id="login-password" required class="w-full border border-stone-300 rounded-lg pl-4 pr-10 py-2 focus:ring-[#D97757] focus:border-[#D97757]">
+                        <button type="button" onclick="togglePassword('login-password', 'login-eye')" class="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600">
+                            <i id="login-eye" class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="login-error" class="text-red-500 text-sm hidden font-bold text-center"></div>
+                <button type="submit" class="w-full bg-[#D97757] text-white font-bold py-3 rounded-lg hover:bg-[#C26243] transition shadow mt-2">
+                    Masuk
+                </button>
+            </form>
+        </div>
+
+        <!-- Setup Box -->
+        <div id="setup-box" class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md border border-stone-100 hidden">
+            <div class="text-center mb-6">
+                <h2 class="text-2xl font-bold text-stone-800"><i class="fas fa-cogs mr-2 text-[#D97757]"></i>Setup Awal</h2>
+                <p class="text-stone-500 text-sm mt-1">Buat akun utama untuk mengakses POS</p>
+            </div>
+            <form id="setup-form" onsubmit="event.preventDefault(); doSetup();" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-stone-600 mb-1">Username</label>
+                    <input type="text" id="setup-username" required class="w-full border border-stone-300 rounded-lg px-4 py-2 focus:ring-[#D97757] focus:border-[#D97757]">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-stone-600 mb-1">Password</label>
+                    <div class="relative">
+                        <input type="password" id="setup-password" required class="w-full border border-stone-300 rounded-lg pl-4 pr-10 py-2 focus:ring-[#D97757] focus:border-[#D97757]">
+                        <button type="button" onclick="togglePassword('setup-password', 'setup-eye')" class="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600">
+                            <i id="setup-eye" class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="setup-error" class="text-red-500 text-sm hidden font-bold text-center"></div>
+                <button type="submit" class="w-full bg-[#D97757] text-white font-bold py-3 rounded-lg hover:bg-[#C26243] transition shadow mt-2">
+                    Buat Akun & Masuk
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Top Header (Mobile Only) -->
+    <div class="md:hidden bg-stone-800 text-stone-100 h-14 flex items-center justify-center shrink-0 shadow-md z-20 relative">
+        <h2 class="text-lg font-bold tracking-wider"><i class="fas fa-coffee mr-2 text-amber-500"></i>POS CAFE</h2>
+        <button onclick="doLogout()" class="absolute right-4 text-stone-400 hover:text-red-400 transition" title="Logout"><i class="fas fa-sign-out-alt text-lg"></i></button>
+    </div>
+
+    <!-- Sidebar / Bottom Nav -->
+    <div class="bg-stone-800 text-stone-100 flex flex-row md:flex-col shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] md:shadow-xl z-20 fixed bottom-0 w-full h-16 md:static md:w-64 md:h-full shrink-0">
+        <div class="hidden md:flex h-20 items-center justify-center border-b border-stone-700 shrink-0">
+            <h2 class="text-2xl font-bold tracking-wider"><i class="fas fa-coffee mr-2 text-amber-500"></i>POS CAFE</h2>
+        </div>
+        <nav class="flex-1 flex flex-row md:flex-col px-2 md:p-4 gap-1 md:gap-3 md:mt-4 overflow-x-auto overflow-y-hidden justify-around items-center md:items-stretch">
+            <button onclick="nav('pos')" class="flex-1 md:w-full flex flex-col md:flex-row items-center justify-center md:justify-start py-1 md:py-3 px-1 md:px-4 rounded-lg hover:bg-stone-700 transition gap-1 md:gap-3 font-medium text-[10px] md:text-base">
+                <i class="fas fa-cash-register text-lg md:text-xl text-amber-500 md:w-6 md:text-center"></i> <span class="whitespace-nowrap">Kasir (POS)</span>
+            </button>
+            <button onclick="nav('menu')" class="flex-1 md:w-full flex flex-col md:flex-row items-center justify-center md:justify-start py-1 md:py-3 px-1 md:px-4 rounded-lg hover:bg-stone-700 transition gap-1 md:gap-3 font-medium text-[10px] md:text-base">
+                <i class="fas fa-box text-lg md:text-xl text-amber-500 md:w-6 md:text-center"></i> <span class="whitespace-nowrap">Menu</span>
+            </button>
+            <button onclick="nav('finance')" class="flex-1 md:w-full flex flex-col md:flex-row items-center justify-center md:justify-start py-1 md:py-3 px-1 md:px-4 rounded-lg hover:bg-stone-700 transition gap-1 md:gap-3 font-medium text-[10px] md:text-base">
+                <i class="fas fa-chart-line text-lg md:text-xl text-amber-500 md:w-6 md:text-center"></i> <span class="whitespace-nowrap">Keuangan</span>
+            </button>
+            <button onclick="nav('ai')" class="flex-1 md:w-full flex flex-col md:flex-row items-center justify-center md:justify-start py-1 md:py-3 px-1 md:px-4 rounded-lg hover:bg-stone-700 transition gap-1 md:gap-3 font-medium text-[10px] md:text-base">
+                <i class="fas fa-robot text-lg md:text-xl text-amber-500 md:w-6 md:text-center"></i> <span class="whitespace-nowrap">Tanya AI</span>
+            </button>
+        </nav>
+        <div class="hidden md:block p-4 border-t border-stone-700">
+            <button onclick="doLogout()" class="w-full bg-stone-700 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition shadow-sm flex items-center justify-center gap-2">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col relative bg-[#FDFBF7] mb-16 md:mb-0 overflow-hidden">
+        
+        <!-- Global Loader -->
+        <div id="loader" class="absolute inset-0 bg-white/80 z-50 flex items-center justify-center hidden">
+            <div class="flex flex-col items-center">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-4 border-[#D97757]"></div>
+                <p class="mt-4 text-[#D97757] font-medium font-bold">Memproses...</p>
+            </div>
+        </div>
+
+        <!-- VIEW: POS -->
+        <div id="view-pos" class="flex-1 flex flex-col lg:flex-row h-full p-3 lg:p-6 gap-4 lg:gap-6 hidden overflow-y-auto lg:overflow-hidden">
+            <!-- Menu Grid -->
+            <div class="flex-1 bg-white rounded-xl shadow-sm flex flex-col border border-stone-100 min-h-[400px] lg:min-h-0 overflow-hidden shrink-0 lg:shrink">
+                <div class="p-4 border-b border-stone-100 bg-stone-50/50 flex flex-col md:flex-row justify-between items-center gap-3">
+                    <h3 class="font-bold text-lg text-stone-800 shrink-0">Daftar Menu</h3>
+                    <div class="flex flex-col md:flex-row gap-2 w-full md:w-auto">
+                        <div class="flex bg-stone-200 rounded-lg p-1 shrink-0">
+                            <button onclick="setFilter('Semua')" id="filter-semua" class="px-3 py-1 text-xs md:text-sm font-bold rounded bg-white text-[#D97757] shadow-sm transition">Semua</button>
+                            <button onclick="setFilter('Makanan')" id="filter-makanan" class="px-3 py-1 text-xs md:text-sm font-bold rounded text-stone-500 hover:text-stone-700 transition">Makanan</button>
+                            <button onclick="setFilter('Minuman')" id="filter-minuman" class="px-3 py-1 text-xs md:text-sm font-bold rounded text-stone-500 hover:text-stone-700 transition">Minuman</button>
+                        </div>
+                        <div class="relative w-full md:w-48">
+                            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-xs"></i>
+                            <input type="text" id="pos-search" onkeyup="searchPOS()" placeholder="Cari menu..." class="w-full pl-8 pr-3 py-1.5 text-sm border border-stone-300 rounded-lg focus:outline-none focus:border-[#D97757]">
+                        </div>
+                    </div>
+                </div>
+                <div class="p-4 flex-1 overflow-y-auto">
+                    <div id="products-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 lg:gap-4">
+                        <!-- Menu items render here -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Cart Sidebar -->
+            <div class="w-full lg:w-[400px] bg-white rounded-xl shadow-sm flex flex-col border border-stone-100 shrink-0 h-fit lg:h-full">
+                <div class="p-4 border-b border-stone-100 bg-stone-50/50">
+                    <h3 class="font-bold text-lg text-stone-800">Pesanan Saat Ini</h3>
+                </div>
+                <div id="cart-list" class="flex-1 p-4 overflow-y-auto space-y-3 min-h-[200px] max-h-[40vh] lg:max-h-none">
+                    <!-- Cart items render here -->
+                </div>
+                
+                <div class="p-4 border-t border-stone-100 bg-stone-50 space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-stone-500 uppercase mb-1">Catatan Tambahan</label>
+                        <textarea id="order-notes" rows="2" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-[#D97757] focus:border-[#D97757] resize-none placeholder-stone-400" placeholder="Contoh: Jangan terlalu pedas, bungkus terpisah..."></textarea>
+                    </div>
+
+                    <div class="flex gap-2">
+                        <div class="flex-1">
+                            <label class="block text-[10px] font-bold text-stone-500 uppercase mb-1">Tipe Pesanan</label>
+                            <div class="flex gap-1">
+                                <button id="btn-dinein" onclick="setOrderType('Dine In')" class="flex-1 py-1.5 border-2 border-[#D97757] bg-orange-50 text-[#D97757] font-bold rounded-lg transition text-sm">Dine In</button>
+                                <button id="btn-takeaway" onclick="setOrderType('Takeaway')" class="flex-1 py-1.5 border-2 border-stone-200 text-stone-500 font-bold rounded-lg transition hover:bg-stone-100 text-sm">Takeaway</button>
+                            </div>
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-[10px] font-bold text-stone-500 uppercase mb-1">Status Pembayaran</label>
+                            <div class="flex gap-1">
+                                <button id="btn-berhasil" onclick="setOrderStatus('Berhasil')" class="flex-1 py-1.5 border-2 border-green-500 bg-green-50 text-green-700 font-bold rounded-lg transition text-sm">Berhasil</button>
+                                <button id="btn-gagal" onclick="setOrderStatus('Gagal')" class="flex-1 py-1.5 border-2 border-stone-200 text-stone-500 font-bold rounded-lg transition hover:bg-stone-100 text-sm">Gagal</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center font-bold text-xl text-stone-800 pt-3 border-t border-stone-200">
+                        <span>Total Bayar:</span>
+                        <span id="cart-total" class="text-[#D97757] text-2xl">Rp 0</span>
+                    </div>
+                    <button onclick="checkout()" id="btn-checkout" class="w-full bg-[#D97757] text-white py-4 rounded-xl font-bold text-lg shadow-md hover:bg-[#C26243] hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed">
+                        Selesaikan Pesanan
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW: MANAJEMEN MENU -->
+        <div id="view-menu" class="flex-1 p-4 lg:p-8 overflow-y-auto hidden">
+            <div class="max-w-5xl mx-auto flex flex-col md:flex-row gap-6">
+                <!-- Tambah Produk Baru -->
+                <div class="w-full md:w-1/3 bg-white p-5 lg:p-6 rounded-xl shadow-sm border border-stone-200 h-fit shrink-0">
+                    <h3 class="font-bold text-lg text-stone-800 mb-4">Tambah Menu Baru</h3>
+                    <form id="form-add-product" onsubmit="event.preventDefault(); submitAddProduct();" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-stone-600 mb-1">Nama Menu</label>
+                            <input type="text" id="add-name" required class="w-full border border-stone-300 rounded-lg px-4 py-2 focus:ring-[#D97757] focus:border-[#D97757]">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-stone-600 mb-1">Kategori</label>
+                            <select id="add-category" required class="w-full border border-stone-300 rounded-lg px-4 py-2 focus:ring-[#D97757] focus:border-[#D97757]">
+                                <option value="Makanan">Makanan</option>
+                                <option value="Minuman">Minuman</option>
+                            </select>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="flex-1">
+                                <label class="block text-sm font-medium text-stone-600 mb-1">Harga (Rp)</label>
+                                <input type="number" id="add-price" required min="1000" class="w-full border border-stone-300 rounded-lg px-4 py-2 focus:ring-[#D97757] focus:border-[#D97757]">
+                            </div>
+                            <div class="w-24">
+                                <label class="block text-sm font-medium text-stone-600 mb-1">Stok</label>
+                                <input type="number" id="add-stock" required min="1" class="w-full border border-stone-300 rounded-lg px-4 py-2 focus:ring-[#D97757] focus:border-[#D97757]">
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full bg-[#D97757] text-white font-bold py-3 rounded-lg hover:bg-[#C26243] transition shadow mt-2">
+                            Simpan Menu
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Tabel Produk -->
+                <div class="w-full md:w-2/3 bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden">
+                    <div class="p-4 border-b border-stone-100 bg-stone-50">
+                        <h3 class="font-bold text-stone-700">Daftar Menu Tersedia</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full">
+                            <thead class="bg-white border-b border-stone-200">
+                                <tr>
+                                    <th class="px-4 lg:px-6 py-3 text-left text-xs font-semibold text-stone-500 uppercase whitespace-nowrap">Nama Menu</th>
+                                    <th class="px-4 lg:px-6 py-3 text-left text-xs font-semibold text-stone-500 uppercase whitespace-nowrap">Kategori</th>
+                                    <th class="px-4 lg:px-6 py-3 text-left text-xs font-semibold text-stone-500 uppercase whitespace-nowrap">Harga</th>
+                                    <th class="px-4 lg:px-6 py-3 text-left text-xs font-semibold text-stone-500 uppercase whitespace-nowrap">Stok</th>
+                                    <th class="px-4 lg:px-6 py-3 text-left text-xs font-semibold text-stone-500 uppercase whitespace-nowrap">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="menu-table-list" class="divide-y divide-stone-100">
+                                <!-- Table list renders here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW: KEUANGAN -->
+        <div id="view-finance" class="flex-1 p-4 lg:p-8 overflow-y-auto hidden">
+            <div class="max-w-6xl mx-auto">
+                <h2 class="text-2xl lg:text-3xl font-bold mb-6 text-stone-800">Laporan Keuangan</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6 mb-8">
+                    <div class="bg-gradient-to-br from-[#D97757] to-[#B05B3D] text-white p-5 lg:p-6 rounded-xl shadow-lg">
+                        <p class="text-sm font-medium opacity-90 mb-1">Total Pendapatan Bersih (Berhasil)</p>
+                        <h3 id="finance-total" class="text-3xl lg:text-4xl font-bold truncate">Rp 0</h3>
+                    </div>
+                    <div class="bg-white border border-stone-200 p-5 lg:p-6 rounded-xl shadow-sm flex items-center">
+                        <div>
+                            <p class="text-sm font-medium text-stone-500 mb-1">Total Transaksi Berhasil</p>
+                            <h3 id="finance-count" class="text-3xl lg:text-4xl font-bold text-stone-800">0 <span class="text-base lg:text-lg font-normal text-stone-500">kali</span></h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden">
+                    <div class="p-4 border-b border-stone-100 bg-stone-50">
+                        <h3 class="font-bold text-stone-700">Riwayat Transaksi Terbaru</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full">
+                            <thead class="bg-white border-b border-stone-200">
+                                <tr>
+                                    <th class="px-4 lg:px-6 py-3 text-left text-xs font-semibold text-stone-500 uppercase whitespace-nowrap">Tanggal</th>
+                                    <th class="px-4 lg:px-6 py-3 text-left text-xs font-semibold text-stone-500 uppercase whitespace-nowrap">Tipe</th>
+                                    <th class="px-4 lg:px-6 py-3 text-left text-xs font-semibold text-stone-500 uppercase whitespace-nowrap">Status</th>
+                                    <th class="px-4 lg:px-6 py-3 text-left text-xs font-semibold text-stone-500 uppercase whitespace-nowrap">Detail</th>
+                                    <th class="px-4 lg:px-6 py-3 text-left text-xs font-semibold text-stone-500 uppercase whitespace-nowrap">Catatan</th>
+                                    <th class="px-4 lg:px-6 py-3 text-left text-xs font-semibold text-stone-500 uppercase whitespace-nowrap">Total (Rp)</th>
+                                    <th class="px-4 lg:px-6 py-3 text-center text-xs font-semibold text-stone-500 uppercase whitespace-nowrap">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="finance-list" class="divide-y divide-stone-100">
+                                <!-- Finance list renders here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW: AI -->
+        <div id="view-ai" class="flex-1 p-4 lg:p-8 flex flex-col hidden h-full items-center">
+            <div class="w-full max-w-3xl flex-1 flex flex-col bg-white rounded-2xl shadow-lg border border-stone-100 overflow-hidden">
+                <div class="p-4 lg:p-5 bg-gradient-to-r from-[#D97757] to-[#B05B3D] text-white flex items-center gap-3 shrink-0">
+                    <i class="fas fa-robot text-xl lg:text-2xl"></i>
+                    <div>
+                        <h3 class="font-bold text-base lg:text-lg">AI Assistant Cafe</h3>
+                        <p class="text-[10px] lg:text-xs opacity-90">Terhubung dengan database</p>
+                    </div>
+                </div>
+                
+                <div id="chat-box" class="flex-1 p-4 lg:p-6 overflow-y-auto space-y-4 lg:space-y-6 bg-stone-50">
+                    <div class="flex gap-3 lg:gap-4">
+                        <div class="w-8 h-8 lg:w-10 lg:h-10 rounded-full bg-orange-100 flex items-center justify-center text-[#D97757] shrink-0 shadow-sm"><i class="fas fa-robot"></i></div>
+                        <div class="bg-white p-3 lg:p-4 rounded-2xl rounded-tl-none shadow-sm text-stone-700 border border-stone-100 prose prose-stone prose-sm lg:prose-base max-w-none prose-p:my-1">
+                            Halo! Saya AI asisten internal Cafe kita. Saya bisa membaca data secara langsung dari database.<br><br>
+                            Silakan tanya saya tentang:<br>
+                            👉 <i>"Gimana penjualan kita sejauh ini?"</i><br>
+                            👉 <i>"Apakah ada stok produk yang mau habis?"</i><br>
+                            👉 <i>"Sebutkan menu yang kita jual dong"</i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="p-3 lg:p-4 bg-white border-t border-stone-100 flex gap-2 lg:gap-3 items-center shrink-0">
+                    <input type="text" id="ai-input" placeholder="Tanya sesuatu..." class="flex-1 border border-stone-300 rounded-full px-4 py-2 lg:px-5 lg:py-3 text-sm lg:text-base focus:outline-none focus:border-[#D97757] focus:ring-1 focus:ring-[#D97757] bg-stone-50" onkeypress="if(event.key === 'Enter') sendAI()">
+                    <button onclick="sendAI()" class="bg-[#D97757] text-white w-10 h-10 lg:w-12 lg:h-12 rounded-full flex items-center justify-center hover:bg-[#C26243] shadow-md transition shrink-0">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- STRUK PDF TEMPLATE (HIDDEN OFFSCREEN) -->
+    <div style="position: absolute; left: -9999px; top: -9999px;">
+        <div id="receipt-box" class="bg-white text-black p-6 w-[80mm] font-mono text-[12px] leading-snug">
+            <div class="text-center mb-4">
+                <h2 class="text-xl font-bold mb-1">POS CAFE</h2>
+                <p class="text-stone-600 mb-2">Jl. Teknologi No. 1</p>
+                <div class="border-b border-dashed border-stone-400"></div>
+            </div>
+            <div class="mb-3 space-y-1">
+                <p>No     : <span id="r-txid" class="font-bold"></span></p>
+                <p>Tanggal: <span id="r-date"></span></p>
+                <p>Tipe   : <span id="r-type"></span></p>
+                <p>Status : <span id="r-status"></span></p>
+            </div>
+            <div class="border-b border-dashed border-stone-400 mb-3"></div>
+            
+            <div id="r-items" class="mb-3 space-y-2">
+                <!-- Items akan diinject di sini -->
+            </div>
+            
+            <div class="border-t border-dashed border-stone-400 mt-2 pt-3">
+                <div class="flex justify-between font-bold text-base">
+                    <span>TOTAL</span>
+                    <span id="r-total"></span>
+                </div>
+            </div>
+            
+            <div id="r-notes-container" class="mt-3 hidden bg-stone-100 p-2 rounded">
+                <p class="font-bold">Catatan:</p>
+                <p id="r-notes" class="italic"></p>
+            </div>
+
+            <div class="mt-6 text-center text-stone-500">
+                <p>Terima Kasih!</p>
+                <p>Silakan Datang Kembali</p>
+            </div>
+        </div>
+    </div>
+
+        <!-- MODAL TAMBAH STOK -->
+    <div id="modal-add-stock" class="fixed inset-0 bg-black/60 z-[150] hidden items-center justify-center p-4">
+        <div class="bg-white rounded-[1.5rem] w-full max-w-sm shadow-2xl flex flex-col overflow-hidden transform scale-95 transition-transform duration-300" id="add-stock-modal-box">
+            <div class="p-6 md:p-8 flex flex-col">
+                <div class="flex items-center justify-between mb-5">
+                    <h3 class="font-bold text-xl text-stone-800">Tambah Stok</h3>
+                    <button onclick="closeAddStockModal()" class="text-stone-400 hover:text-stone-600 transition">
+                        <i class="fas fa-times text-lg"></i>
+                    </button>
+                </div>
+                
+                <div class="mb-4">
+                    <p class="text-sm text-stone-500 mb-1">Produk</p>
+                    <p id="stock-modal-product-name" class="font-bold text-stone-800">-</p>
+                    <p class="text-xs text-stone-400 mt-1">Stok saat ini: <span id="stock-modal-current" class="font-bold text-stone-600">0</span></p>
+                </div>
+
+                <div class="mb-5">
+                    <label class="block text-sm font-semibold text-stone-700 mb-2">Jumlah Ditambahkan</label>
+                    <input type="number" id="stock-modal-input" class="w-full border-stone-200 rounded-xl px-4 py-3 text-stone-700 focus:ring-2 focus:ring-[#D97757] focus:border-[#D97757] outline-none transition" min="1" value="1" oninput="updateEstimatedStock()">
+                    
+                    <div class="flex flex-wrap gap-2 mt-3">
+                        <button onclick="setStockInput(1)" class="px-3 py-1 bg-stone-100 hover:bg-stone-200 rounded-lg text-sm font-medium text-stone-600 transition">+1</button>
+                        <button onclick="setStockInput(5)" class="px-3 py-1 bg-stone-100 hover:bg-stone-200 rounded-lg text-sm font-medium text-stone-600 transition">+5</button>
+                        <button onclick="setStockInput(12)" class="px-3 py-1 bg-stone-100 hover:bg-stone-200 rounded-lg text-sm font-medium text-stone-600 transition">+12</button>
+                        <button onclick="setStockInput(25)" class="px-3 py-1 bg-stone-100 hover:bg-stone-200 rounded-lg text-sm font-medium text-stone-600 transition">+25</button>
+                        <button onclick="setStockInput(50)" class="px-3 py-1 bg-stone-100 hover:bg-stone-200 rounded-lg text-sm font-medium text-stone-600 transition">+50</button>
+                    </div>
+                </div>
+
+                <div class="bg-stone-50 p-4 rounded-xl mb-6 flex justify-between items-center border border-stone-100">
+                    <span class="text-sm font-medium text-stone-600">Estimasi Stok Akhir:</span>
+                    <span id="stock-modal-estimated" class="text-lg font-bold text-[#D97757]">0</span>
+                </div>
+
+                <input type="hidden" id="stock-modal-product-id">
+
+                <div class="flex gap-3">
+                    <button onclick="closeAddStockModal()" class="flex-1 py-3 bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold rounded-xl transition">Batal</button>
+                    <button onclick="submitAddStock()" class="flex-1 py-3 bg-[#D97757] hover:bg-[#B05B3D] text-white font-bold rounded-xl shadow-md shadow-[#D97757]/30 transition">Simpan Stok</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL SUKSES PEMBAYARAN -->
+    <div id="modal-success" class="fixed inset-0 bg-black/60 z-[150] hidden items-center justify-center p-4">
+        <div class="bg-white rounded-[1.5rem] w-full max-w-sm shadow-2xl flex flex-col overflow-hidden transform scale-95 transition-transform duration-300" id="success-modal-box">
+            <div class="p-6 md:p-8 flex flex-col items-center text-center relative">
+                <div class="w-20 h-20 rounded-full bg-green-50 flex items-center justify-center text-green-500 mb-5 shadow-sm border border-green-100">
+                    <i class="fas fa-check-circle text-4xl"></i>
+                </div>
+                <h3 class="font-bold text-2xl text-stone-800 mb-2">Pembayaran Berhasil!</h3>
+                <p class="text-sm text-stone-500 mb-6 leading-relaxed">Transaksi berhasil dicatat dan struk sedang disiapkan.</p>
+                
+                <!-- Ringkasan Transaksi -->
+                <div class="w-full bg-stone-50 rounded-2xl border border-stone-100 p-4 space-y-3 text-sm text-left mb-8 shadow-inner">
+                    <div class="flex justify-between items-center pb-2 border-b border-stone-200 border-dashed">
+                        <span class="text-stone-500 font-medium">ID Transaksi</span>
+                        <span class="font-bold text-stone-800" id="succ-txid">-</span>
+                    </div>
+                    <div class="flex justify-between items-center pb-2 border-b border-stone-200 border-dashed">
+                        <span class="text-stone-500 font-medium">Tipe Pesanan</span>
+                        <span class="font-bold text-stone-800" id="succ-type">-</span>
+                    </div>
+                    <div class="flex justify-between items-center pb-2 border-b border-stone-200 border-dashed">
+                        <span class="text-stone-500 font-medium">Total Item</span>
+                        <span class="font-bold text-stone-800" id="succ-items">-</span>
+                    </div>
+                    <div class="flex justify-between items-center pb-2 border-b border-stone-200 border-dashed">
+                        <span class="text-stone-500 font-medium">Status Pembayaran</span>
+                        <span class="font-bold text-stone-800" id="succ-payment">-</span>
+                    </div>
+                    <div class="flex justify-between items-center pt-1">
+                        <span class="text-stone-500 font-bold">Total</span>
+                        <span class="font-black text-xl text-[#D97757]" id="succ-total">-</span>
+                    </div>
+                </div>
+
+                <button onclick="closeSuccessModal()" class="w-full py-3.5 rounded-xl font-bold text-white bg-[#D97757] hover:bg-[#C26243] transition shadow-md text-lg">Selesai</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL REFUND -->
+    <div id="modal-refund" class="fixed inset-0 bg-black/60 z-[100] hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-lg shadow-2xl flex flex-col overflow-hidden max-h-full">
+            <div class="p-5 border-b border-stone-100 bg-red-50 flex justify-between items-center">
+                <h3 class="font-bold text-lg text-red-700">Form Refund Transaksi</h3>
+                <button onclick="closeRefundModal()" class="text-stone-400 hover:text-stone-600"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="p-5 overflow-y-auto flex-1 space-y-4">
+                <div class="grid grid-cols-2 gap-4 text-sm bg-stone-50 p-3 rounded-lg border border-stone-100">
+                    <div><span class="text-stone-500">No. TX:</span> <br><strong id="ref-txid"></strong></div>
+                    <div><span class="text-stone-500">Tanggal:</span> <br><strong id="ref-txdate"></strong></div>
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-bold text-stone-500 uppercase mb-2">Pilih Item untuk Direfund</label>
+                    <div id="ref-items-container" class="space-y-2 border border-stone-200 rounded-lg p-3 bg-white">
+                        <!-- Checkbox & Qty refund render here -->
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-stone-500 uppercase mb-1">Alasan Refund</label>
+                    <input type="text" id="ref-reason" placeholder="Contoh: Pesanan salah, pelanggan komplain..." class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500">
+                </div>
+                
+                <div class="flex items-center gap-2 bg-yellow-50 p-3 rounded-lg border border-yellow-200 text-sm">
+                    <input type="checkbox" id="ref-is-full" class="w-4 h-4 text-red-600 rounded border-stone-300 focus:ring-red-500" onchange="toggleFullRefund()">
+                    <label for="ref-is-full" class="font-bold text-yellow-800">Batalkan/Refund Keseluruhan Transaksi</label>
+                </div>
+            </div>
+            <div class="p-5 border-t border-stone-100 bg-stone-50 flex justify-end gap-3">
+                <button onclick="closeRefundModal()" class="px-5 py-2 rounded-lg font-bold text-stone-600 bg-stone-200 hover:bg-stone-300 transition">Batal</button>
+                <button onclick="submitRefund()" class="px-5 py-2 rounded-lg font-bold text-white bg-red-600 hover:bg-red-700 transition shadow-md">Proses Refund</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOTIFICATION SYSTEM -->
+    <div id="toast-container" class="fixed top-4 right-4 z-[200] flex flex-col gap-2 w-full max-w-sm pointer-events-none px-4 md:px-0"></div>
+
+    <div id="confirm-modal" class="fixed inset-0 bg-black/60 z-[200] hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-sm shadow-2xl flex flex-col overflow-hidden transform scale-95 transition-transform duration-200" id="confirm-modal-box">
+            <div class="p-6 flex flex-col items-center text-center">
+                <div id="confirm-icon" class="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center text-red-500 mb-4 shadow-sm border border-red-100">
+                    <i class="fas fa-exclamation-triangle text-2xl"></i>
+                </div>
+                <h3 id="confirm-title" class="font-bold text-xl text-stone-800 mb-2">Konfirmasi</h3>
+                <p id="confirm-message" class="text-sm text-stone-500 mb-6 leading-relaxed">Apakah Anda yakin?</p>
+                <div class="flex w-full gap-3">
+                    <button id="confirm-btn-cancel" class="flex-1 py-2.5 rounded-xl font-bold text-stone-600 bg-stone-100 hover:bg-stone-200 transition">Batal</button>
+                    <button id="confirm-btn-ok" class="flex-1 py-2.5 rounded-xl font-bold text-white bg-red-600 hover:bg-red-700 transition shadow-md">Ya, Lanjutkan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOGIC JS -->
+    <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycbzQHliSfTVS_jrVTnBJNqkuyl7FbYsrTNtE-TF9p68RjtyKKdKv6IAOXQilNrvLl6pP/exec"; // Masukkan URL hasil deploy web app di sini
+        let products = [];
+        let cart = [];
+        let currentOrderType = 'Dine In';
+        let currentOrderStatus = 'Berhasil';
+        let filterCategory = 'Semua';
+        let searchQuery = '';
+        let financeDataCache = []; // untuk menyimpan referensi saat klik refund
+
+        // ==========================================
+        // 0. NOTIFICATION SYSTEM
+        // ==========================================
+        function showToast(type, title, message = '', duration = 4000) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'bg-white border-l-4 rounded-lg shadow-lg p-4 flex items-start gap-3 pointer-events-auto transform transition-all duration-300 translate-x-full opacity-0';
+            
+            let icon = ''; let borderClass = ''; let iconClass = '';
+            
+            if (type === 'success') {
+                icon = 'fa-check-circle'; borderClass = 'border-green-500'; iconClass = 'text-green-500';
+            } else if (type === 'error') {
+                icon = 'fa-times-circle'; borderClass = 'border-red-500'; iconClass = 'text-red-500';
+            } else if (type === 'warning') {
+                icon = 'fa-exclamation-triangle'; borderClass = 'border-yellow-500'; iconClass = 'text-yellow-500';
+            } else {
+                icon = 'fa-info-circle'; borderClass = 'border-[#D97757]'; iconClass = 'text-[#D97757]';
+            }
+            
+            toast.classList.add(borderClass);
+            
+            toast.innerHTML = `
+                <i class="fas ${icon} ${iconClass} text-xl mt-0.5 shrink-0"></i>
+                <div class="flex-1">
+                    <h4 class="font-bold text-stone-800 text-sm">${title}</h4>
+                    ${message ? `<p class="text-xs text-stone-500 mt-1 leading-relaxed">${message}</p>` : ''}
+                </div>
+                <button onclick="this.parentElement.style.opacity='0'; setTimeout(()=>this.parentElement.remove(),300)" class="text-stone-400 hover:text-stone-600 shrink-0">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            container.appendChild(toast);
+            
+            // Animate in
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-x-full', 'opacity-0');
+            });
+            
+            if (duration > 0) {
+                setTimeout(() => {
+                    toast.classList.add('translate-x-full', 'opacity-0');
+                    setTimeout(() => toast.remove(), 300);
+                }, duration);
+            }
+        }
+
+        function showConfirmDialog(type, title, message, okText, cancelText, onConfirm) {
+            const modal = document.getElementById('confirm-modal');
+            const box = document.getElementById('confirm-modal-box');
+            const iconDiv = document.getElementById('confirm-icon');
+            const titleEl = document.getElementById('confirm-title');
+            const msgEl = document.getElementById('confirm-message');
+            const btnOk = document.getElementById('confirm-btn-ok');
+            const btnCancel = document.getElementById('confirm-btn-cancel');
+            
+            let iconHtml = ''; let iconColor = ''; let btnClass = '';
+            
+            if (type === 'danger') {
+                iconHtml = '<i class="fas fa-exclamation-triangle text-3xl"></i>';
+                iconColor = 'bg-red-50 text-red-500 border-red-100';
+                btnClass = 'bg-red-600 hover:bg-red-700';
+            } else if (type === 'warning') {
+                iconHtml = '<i class="fas fa-exclamation-circle text-3xl"></i>';
+                iconColor = 'bg-amber-50 text-amber-500 border-amber-100';
+                btnClass = 'bg-amber-500 hover:bg-amber-600 text-white'; 
+            } else {
+                iconHtml = '<i class="fas fa-question-circle text-3xl"></i>';
+                iconColor = 'bg-stone-100 text-stone-600 border-stone-200';
+                btnClass = 'bg-[#D97757] hover:bg-[#C26243] text-white';
+            }
+            
+            iconDiv.className = `w-16 h-16 rounded-full flex items-center justify-center mb-4 shadow-sm border ${iconColor}`;
+            iconDiv.innerHTML = iconHtml;
+            
+            titleEl.innerText = title;
+            msgEl.innerHTML = message;
+            
+            btnOk.className = `flex-1 py-2.5 rounded-xl font-bold transition shadow-md ${btnClass}`;
+            btnOk.innerText = okText;
+            btnCancel.innerText = cancelText;
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            requestAnimationFrame(() => box.classList.remove('scale-95'));
+            
+            // Remove previous listeners
+            btnCancel.onclick = null;
+            btnOk.onclick = null;
+
+            const closeModal = () => {
+                box.classList.add('scale-95');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                }, 200);
+            };
+
+            btnCancel.onclick = closeModal;
+            
+            btnOk.onclick = () => {
+                closeModal();
+                if (onConfirm) onConfirm();
+            };
+        }
+
+        // ==========================================
+        // 0.5 AUTH & SETUP LOGIC
+        // ==========================================
+        function togglePassword(inputId, iconId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        async function checkSetupStatus() {
+            showLoader(true);
+            const res = await fetchAPI('checkSetup', {}, true);
+            showLoader(false);
+            
+            document.getElementById('auth-layout').classList.remove('hidden');
+            if (res && res.isSetup) {
+                document.getElementById('login-box').classList.remove('hidden');
+                document.getElementById('setup-box').classList.add('hidden');
+            } else {
+                document.getElementById('setup-box').classList.remove('hidden');
+                document.getElementById('login-box').classList.add('hidden');
+            }
+        }
+
+        function showAuthView() {
+            sessionStorage.removeItem('pos_token');
+            checkSetupStatus();
+        }
+
+        async function doLogin() {
+            const user = document.getElementById('login-username').value.trim();
+            const pass = document.getElementById('login-password').value;
+            const errDiv = document.getElementById('login-error');
+            
+            errDiv.classList.add('hidden');
+            showLoader(true);
+            
+            const res = await fetchAPI('login', { username: user, password: pass }, true);
+            showLoader(false);
+            
+            if (res && res.success) {
+                sessionStorage.setItem('pos_token', res.token);
+                document.getElementById('auth-layout').classList.add('hidden');
+                document.getElementById('login-form').reset();
+                initApp();
+            } else if (res && res.error) {
+                showToast('error', 'Login Gagal', res.error);
+            }
+        }
+
+        async function doSetup() {
+            const user = document.getElementById('setup-username').value.trim();
+            const pass = document.getElementById('setup-password').value;
+            const errDiv = document.getElementById('setup-error');
+            
+            errDiv.classList.add('hidden');
+            showLoader(true);
+            
+            const res = await fetchAPI('setupAccount', { username: user, password: pass }, true);
+            showLoader(false);
+            
+            if (res && res.success) {
+                showToast('success', 'Akun Berhasil Dibuat', 'Silakan masuk menggunakan kredensial baru Anda.');
+                document.getElementById('setup-form').reset();
+                checkSetupStatus(); 
+            } else if (res && res.error) {
+                errDiv.innerText = res.error;
+                errDiv.classList.remove('hidden');
+            }
+        }
+
+        async function doLogout() {
+            showConfirmDialog('warning', 'Konfirmasi Logout', 'Anda yakin ingin keluar dari sistem POS Cafe?', 'Ya, Keluar', 'Batal', async () => {
+                showLoader(true);
+                await fetchAPI('logout', {}, true);
+                showLoader(false);
+                showAuthView();
+            });
+        }
+
+        function initApp() {
+            loadProducts();
+            nav('pos');
+        }
+
+        function nav(view) {
+            document.getElementById('view-pos').classList.add('hidden');
+            document.getElementById('view-menu').classList.add('hidden');
+            document.getElementById('view-finance').classList.add('hidden');
+            document.getElementById('view-ai').classList.add('hidden');
+            
+            document.getElementById('view-' + view).classList.remove('hidden');
+
+            if (view === 'pos') { loadProducts(); setFilter('Semua'); }
+            if (view === 'menu') renderMenuTable(); 
+            if (view === 'finance') loadFinance();
+        }
+
+        const formatRp = (num) => 'Rp ' + Number(num).toLocaleString('id-ID');
+        const showLoader = (show) => document.getElementById('loader').classList[show ? 'remove' : 'add']('hidden');
+
+        async function fetchAPI(action, payload = {}, quiet = false) {
+            if (API_URL === "GANTI_DENGAN_URL_WEB_APP_ANDA") {
+                showToast('warning', 'Konfigurasi Diperlukan', 'Ganti API_URL di dalam file index.html dengan URL hasil Deploy Apps Script Anda.', 10000);
+                if(!quiet) showLoader(false);
+                return null;
+            }
+            const token = sessionStorage.getItem('pos_token');
+            
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout
+            
+            try {
+                const res = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: action, token: token, ...payload }),
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+                const json = await res.json();
+                if (json && json.error === 'unauthorized' && action !== 'login' && action !== 'checkSetup' && action !== 'setupAccount') {
+                    showAuthView();
+                    return null;
+                }
+                return json;
+            } catch (e) {
+                clearTimeout(timeoutId);
+                console.error("Gagal terhubung ke API:", e);
+                if (e.name === 'AbortError') {
+                    if (!quiet) showToast('error', 'Koneksi Timeout', 'Server terlalu lama merespons. Silakan coba lagi nanti.');
+                } else {
+                    if (!quiet) showToast('error', 'Koneksi Gagal', 'Gagal terhubung ke server. Periksa koneksi atau URL.');
+                }
+                if(!quiet) showLoader(false);
+                return null;
+            }
+        }
+
+        // ==========================================
+        // 1. KASIR (POS) LOGIC
+        // ==========================================
+        async function loadProducts() {
+            showLoader(true);
+            const res = await fetchAPI('getProducts');
+            if (res && res.data) {
+                products = res.data;
+                renderPOSMenu();
+                renderMenuTable();
+            }
+            showLoader(false);
+        }
+        
+        function setFilter(cat) {
+            filterCategory = cat;
+            ['Semua','Makanan','Minuman'].forEach(c => {
+                const btn = document.getElementById('filter-' + c.toLowerCase());
+                if(btn) {
+                    if (c === cat) {
+                        btn.className = "px-3 py-1 text-xs md:text-sm font-bold rounded bg-white text-[#D97757] shadow-sm transition";
+                    } else {
+                        btn.className = "px-3 py-1 text-xs md:text-sm font-bold rounded text-stone-500 hover:text-stone-700 transition";
+                    }
+                }
+            });
+            renderPOSMenu();
+        }
+        
+        function searchPOS() {
+            searchQuery = document.getElementById('pos-search').value.toLowerCase();
+            renderPOSMenu();
+        }
+
+        function renderPOSMenu() {
+            const grid = document.getElementById('products-grid');
+            grid.innerHTML = '';
+            
+            let filtered = products;
+            
+            if (filterCategory !== 'Semua') {
+                filtered = filtered.filter(p => p.category === filterCategory);
+            }
+            if (searchQuery.trim() !== '') {
+                filtered = filtered.filter(p => p.name.toLowerCase().includes(searchQuery));
+            }
+            
+            if (filtered.length === 0) {
+                grid.innerHTML = '<div class="col-span-full text-center text-stone-400 py-10">Produk tidak ditemukan</div>';
+                return;
+            }
+            
+            filtered.forEach(p => {
+                const outOfStock = p.stock <= 0;
+                const iconClass = p.category === 'Makanan' ? 'fa-hamburger text-amber-500' : 'fa-coffee text-stone-500';
+                
+                grid.innerHTML += `
+                    <button onclick="addToCart('${p.id}')" ${outOfStock ? 'disabled' : ''} 
+                        class="p-3 rounded-xl border border-stone-200 bg-white shadow-sm hover:border-[#D97757] hover:shadow-md transition flex flex-col items-center ${outOfStock ? 'opacity-50 cursor-not-allowed bg-stone-50' : ''}">
+                        <div class="w-10 h-10 lg:w-12 lg:h-12 bg-orange-50 rounded-full flex items-center justify-center mb-2">
+                            <i class="fas ${iconClass} text-lg lg:text-xl"></i>
+                        </div>
+                        <span class="font-bold text-stone-800 text-center leading-tight h-10 flex items-center text-xs lg:text-sm">${p.name}</span>
+                        <span class="text-[10px] lg:text-xs text-stone-400 mt-1">${p.category}</span>
+                        <span class="text-[#D97757] font-bold mt-1 text-sm lg:text-base">${formatRp(p.price)}</span>
+                        <span class="text-[10px] font-medium text-stone-500 mt-2 bg-stone-100 px-2 py-0.5 rounded-full border border-stone-200">Stok: ${p.stock}</span>
+                    </button>
+                `;
+            });
+        }
+
+        function addToCart(id) {
+            const p = products.find(x => x.id === id);
+            const item = cart.find(x => x.id === id);
+            
+            if (item) {
+                if (item.qty < p.stock) item.qty++;
+                else showToast('warning', 'Stok Maksimal', 'Anda telah mencapai batas maksimal stok produk ini.');
+            } else {
+                cart.push({ ...p, qty: 1 });
+            }
+            renderCart();
+        }
+
+        function updateQty(id, delta) {
+            const item = cart.find(x => x.id === id);
+            const p = products.find(x => x.id === id);
+            if (!item) return;
+            
+            item.qty += delta;
+            if (item.qty <= 0) {
+                cart = cart.filter(x => x.id !== id);
+            } else if (item.qty > p.stock) {
+                item.qty = p.stock;
+            }
+            
+            renderCart();
+        }
+
+        function renderCart() {
+            const list = document.getElementById('cart-list');
+            list.innerHTML = '';
+            let total = 0;
+            
+            if (cart.length === 0) {
+                list.innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-full text-stone-400 opacity-70">
+                        <i class="fas fa-shopping-basket text-3xl lg:text-4xl mb-3"></i>
+                        <p class="text-sm">Keranjang masih kosong</p>
+                    </div>`;
+            }
+
+            cart.forEach(c => {
+                total += c.price * c.qty;
+                list.innerHTML += `
+                    <div class="flex justify-between items-center border border-stone-100 p-2 lg:p-3 rounded-lg shadow-sm">
+                        <div class="flex-1">
+                            <div class="font-bold text-stone-800 text-sm">${c.name}</div>
+                            <div class="text-xs text-[#D97757] font-semibold">${formatRp(c.price)}</div>
+                        </div>
+                        <div class="flex items-center gap-2 bg-stone-50 rounded-lg p-1">
+                            <button onclick="updateQty('${c.id}', -1)" class="w-7 h-7 bg-white rounded-md shadow-sm border border-stone-200 hover:text-red-500 font-bold">-</button>
+                            <span class="w-5 text-center font-bold text-stone-800 text-sm">${c.qty}</span>
+                            <button onclick="updateQty('${c.id}', 1)" class="w-7 h-7 bg-white rounded-md shadow-sm border border-stone-200 hover:text-[#D97757] font-bold">+</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('cart-total').innerText = formatRp(total);
+            document.getElementById('btn-checkout').disabled = cart.length === 0;
+        }
+
+        function setOrderType(type) {
+            currentOrderType = type;
+            const btnDineIn = document.getElementById('btn-dinein');
+            const btnTakeaway = document.getElementById('btn-takeaway');
+            if (type === 'Dine In') {
+                btnDineIn.className = "flex-1 py-1.5 border-2 border-[#D97757] bg-orange-50 text-[#D97757] font-bold rounded-lg transition text-sm";
+                btnTakeaway.className = "flex-1 py-1.5 border-2 border-stone-200 text-stone-500 font-bold rounded-lg transition hover:bg-stone-100 text-sm";
+            } else {
+                btnTakeaway.className = "flex-1 py-1.5 border-2 border-[#D97757] bg-orange-50 text-[#D97757] font-bold rounded-lg transition text-sm";
+                btnDineIn.className = "flex-1 py-1.5 border-2 border-stone-200 text-stone-500 font-bold rounded-lg transition hover:bg-stone-100 text-sm";
+            }
+        }
+
+        function setOrderStatus(status) {
+            currentOrderStatus = status;
+            const btnBerhasil = document.getElementById('btn-berhasil');
+            const btnGagal = document.getElementById('btn-gagal');
+            if (status === 'Berhasil') {
+                btnBerhasil.className = "flex-1 py-1.5 border-2 border-green-500 bg-green-50 text-green-700 font-bold rounded-lg transition text-sm";
+                btnGagal.className = "flex-1 py-1.5 border-2 border-stone-200 text-stone-500 font-bold rounded-lg transition hover:bg-stone-100 text-sm";
+            } else {
+                btnGagal.className = "flex-1 py-1.5 border-2 border-red-500 bg-red-50 text-red-700 font-bold rounded-lg transition text-sm";
+                btnBerhasil.className = "flex-1 py-1.5 border-2 border-stone-200 text-stone-500 font-bold rounded-lg transition hover:bg-stone-100 text-sm";
+            }
+        }
+
+        async function checkout() {
+            if (cart.length === 0) return;
+            const total = cart.reduce((sum, c) => sum + (c.price * c.qty), 0);
+            const totalItemsCount = cart.reduce((sum, c) => sum + c.qty, 0);
+            const notes = document.getElementById('order-notes').value.trim();
+            
+            showLoader(true);
+            const res = await fetchAPI('submitTransaction', { 
+                cart: cart, 
+                total: total,
+                orderType: currentOrderType,
+                status: currentOrderStatus,
+                notes: notes
+            });
+
+            if (res && res.success) {
+                const txData = res.success; // Berisi { txId, date }
+                
+                // Isi data ringkasan ke modal sukses
+                document.getElementById('succ-txid').innerText = txData.txId;
+                document.getElementById('succ-type').innerText = currentOrderType;
+                document.getElementById('succ-items').innerText = `${totalItemsCount} Item`;
+                document.getElementById('succ-payment').innerText = currentOrderStatus;
+                document.getElementById('succ-total').innerText = formatRp(total);
+                
+                // Tampilkan Modal
+                const modal = document.getElementById('modal-success');
+                const box = document.getElementById('success-modal-box');
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                requestAnimationFrame(() => box.classList.remove('scale-95'));
+                
+                // Generate & Download PDF (Otomatis)
+                generatePDF(txData.txId, txData.date, currentOrderType, currentOrderStatus, notes, cart, total);
+                
+            } else {
+                showToast('error', 'Checkout Gagal', res ? res.error : 'Terjadi kesalahan saat memproses pesanan.');
+            }
+            showLoader(false);
+        }
+
+        function closeSuccessModal() {
+            const modal = document.getElementById('modal-success');
+            const box = document.getElementById('success-modal-box');
+            
+            box.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                
+                // Reset Form & Cart setelah modal ditutup
+                cart = [];
+                document.getElementById('order-notes').value = '';
+                renderCart();
+                loadProducts(); // Update stok dari db
+            }, 300);
+        }
+
+        function generatePDF(txId, date, type, status, notes, cartData, total) {
+            // Fill data ke Template HTML
+            document.getElementById('r-txid').innerText = txId;
+            document.getElementById('r-date').innerText = date;
+            document.getElementById('r-type').innerText = type;
+            document.getElementById('r-status').innerText = status;
+            
+            const rNotesContainer = document.getElementById('r-notes-container');
+            if (notes) {
+                document.getElementById('r-notes').innerText = notes;
+                rNotesContainer.classList.remove('hidden');
+            } else {
+                rNotesContainer.classList.add('hidden');
+            }
+
+            document.getElementById('r-total').innerText = formatRp(total);
+
+            const rItems = document.getElementById('r-items');
+            rItems.innerHTML = '';
+            cartData.forEach(c => {
+                rItems.innerHTML += `
+                    <div class="flex justify-between">
+                        <div class="flex-1 pr-2">
+                            <div class="font-bold">${c.name}</div>
+                            <div class="text-[10px] text-stone-500">${c.qty} x ${formatRp(c.price)}</div>
+                        </div>
+                        <div class="font-bold whitespace-nowrap text-right flex items-end">${formatRp(c.qty * c.price)}</div>
+                    </div>
+                `;
+            });
+
+            // Opsi HTML2PDF
+            const element = document.getElementById('receipt-box');
+            const opt = {
+                margin:       [0, 0, 0, 0],
+                filename:     `Struk_${txId}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 3, useCORS: true },
+                jsPDF:        { unit: 'mm', format: [80, 200], orientation: 'portrait' } 
+                // Format panjang roll paper 80mm
+            };
+
+            // Jalankan
+            html2pdf().set(opt).from(element).save();
+        }
+
+        // ==========================================
+        // 2. MANAJEMEN MENU LOGIC
+        // ==========================================
+        function renderMenuTable() {
+            if(products.length === 0) {
+                loadProducts();
+                return;
+            }
+
+            const list = document.getElementById('menu-table-list');
+            list.innerHTML = '';
+            
+            products.forEach(p => {
+                const iconClass = p.category === 'Makanan' ? 'fa-hamburger text-amber-500' : 'fa-coffee text-stone-500';
+                list.innerHTML += `
+                    <tr class="hover:bg-stone-50 transition border-b border-stone-50">
+                        <td class="px-4 lg:px-6 py-4 whitespace-nowrap text-sm font-bold text-stone-700">
+                            <i class="fas ${iconClass} mr-2 lg:mr-3 w-4 text-center"></i>${p.name}
+                        </td>
+                        <td class="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-stone-500">${p.category}</td>
+                        <td class="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-[#D97757] font-semibold">${formatRp(p.price)}</td>
+                        <td class="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-stone-500">${p.stock}</td>
+                        <td class="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-stone-500">
+                            <button onclick="openAddStockModal('${p.id}', '${p.name.replace(/'/g, "\\'")}', ${p.stock})" class="text-xs bg-stone-100 hover:bg-stone-200 text-stone-600 px-3 py-1.5 rounded-lg transition font-medium">
+                                <i class="fas fa-plus mr-1"></i> Stok
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+                let currentStockModalValue = 0;
+
+        function openAddStockModal(id, name, currentStock) {
+            document.getElementById('stock-modal-product-id').value = id;
+            document.getElementById('stock-modal-product-name').innerText = name;
+            document.getElementById('stock-modal-current').innerText = currentStock;
+            document.getElementById('stock-modal-input').value = 1;
+            currentStockModalValue = currentStock;
+            
+            updateEstimatedStock();
+            
+            const modal = document.getElementById('modal-add-stock');
+            const box = document.getElementById('add-stock-modal-box');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            requestAnimationFrame(() => box.classList.remove('scale-95'));
+        }
+
+        function closeAddStockModal() {
+            const modal = document.getElementById('modal-add-stock');
+            const box = document.getElementById('add-stock-modal-box');
+            
+            box.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.getElementById('stock-modal-input').value = 1;
+            }, 300);
+        }
+
+        function setStockInput(val) {
+            const input = document.getElementById('stock-modal-input');
+            input.value = parseInt(input.value || 0) + val;
+            updateEstimatedStock();
+        }
+
+        function updateEstimatedStock() {
+            const inputVal = Number(document.getElementById('stock-modal-input').value);
+            const estElement = document.getElementById('stock-modal-estimated');
+            if (!Number.isInteger(inputVal) || inputVal <= 0) {
+                estElement.innerText = "Error";
+                estElement.classList.replace('text-[#D97757]', 'text-red-500');
+            } else {
+                estElement.innerText = currentStockModalValue + inputVal;
+                estElement.classList.replace('text-red-500', 'text-[#D97757]');
+            }
+        }
+
+        async function submitAddStock() {
+            const productId = document.getElementById('stock-modal-product-id').value;
+            const qtyStr = document.getElementById('stock-modal-input').value;
+            const qtyToAdd = Number(qtyStr);
+            if (!Number.isInteger(qtyToAdd)) { showToast('error', 'Input Tidak Valid', 'Jumlah stok harus berupa bilangan bulat tanpa pecahan.'); return; }
+            
+            if (!productId || isNaN(qtyToAdd) || qtyToAdd <= 0) {
+                showToast('error', 'Input Tidak Valid', 'Pastikan jumlah stok yang ditambahkan adalah angka lebih dari 0.');
+                return;
+            }
+            
+            showLoader(true);
+            const res = await fetchAPI('addStock', { 
+                productId: productId, 
+                qty: qtyToAdd,
+                username: localStorage.getItem('pos_username') || sessionStorage.getItem('pos_username') || 'Admin' 
+            });
+            showLoader(false);
+            
+            if (res && res.success) {
+                showToast('success', 'Stok Berhasil Ditambah', `Stok baru produk menjadi ${res.newStock}.`);
+                closeAddStockModal();
+                loadProducts(); // Refresh products list
+            } else {
+                showToast('error', 'Gagal Menambah Stok', res ? res.error : 'Terjadi kesalahan jaringan atau server.');
+            }
+        }
+
+
+        async function submitAddProduct() {
+            const product = {
+                name: document.getElementById('add-name').value,
+                category: document.getElementById('add-category').value,
+                price: parseInt(document.getElementById('add-price').value),
+                stock: parseInt(document.getElementById('add-stock').value)
+            };
+
+            showLoader(true);
+            const res = await fetchAPI('addProduct', { product: product });
+            if (res && res.success) {
+                showToast('success', 'Menu Ditambahkan', 'Produk baru telah berhasil disimpan.');
+                document.getElementById('form-add-product').reset();
+                loadProducts();
+            } else {
+                showToast('error', 'Gagal Menambahkan', 'Terjadi kesalahan saat menambahkan menu.');
+            }
+            showLoader(false);
+        }
+
+        // ==========================================
+        // 3. KEUANGAN & REFUND LOGIC
+        // ==========================================
+        async function loadFinance() {
+            showLoader(true);
+            const res = await fetchAPI('getFinanceData');
+            if (res && res.data) {
+                const data = res.data;
+                financeDataCache = data.list; // simpan referensi
+                
+                document.getElementById('finance-total').innerText = formatRp(data.total);
+                document.getElementById('finance-count').innerHTML = `${data.count} <span class="text-lg font-normal text-stone-500">kali</span>`;
+                
+                const list = document.getElementById('finance-list');
+                list.innerHTML = '';
+                
+                if (data.list.length === 0) {
+                    list.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-stone-500">Belum ada transaksi sama sekali.</td></tr>';
+                }
+
+                data.list.forEach(tx => {
+                    let statusClass = 'bg-stone-100 text-stone-600 border-stone-200';
+                    let actionBtn = '';
+                    
+                    if (tx.status === 'Berhasil') {
+                        statusClass = 'bg-green-100 text-green-700 border-green-200';
+                        actionBtn = `<button onclick="openRefundModal('${tx.id}')" class="text-[10px] lg:text-xs bg-stone-200 hover:bg-red-500 hover:text-white text-stone-600 px-2 lg:px-3 py-1.5 rounded-md font-medium transition shadow-sm">Refund</button>`;
+                    } else if (tx.status === 'Refund Sebagian') {
+                        statusClass = 'bg-yellow-100 text-yellow-700 border-yellow-200';
+                        actionBtn = `<button onclick="openRefundModal('${tx.id}')" class="text-[10px] lg:text-xs bg-stone-200 hover:bg-yellow-500 hover:text-white text-stone-600 px-2 lg:px-3 py-1.5 rounded-md font-medium transition shadow-sm">Refund Lagi</button>`;
+                    } else if (tx.status === 'Refund Penuh' || tx.status === 'Gagal') {
+                        statusClass = 'bg-red-100 text-red-700 border-red-200';
+                        actionBtn = `<span class="text-[10px] lg:text-xs text-stone-400 font-medium">Selesai</span>`;
+                    }
+
+                    list.innerHTML += `
+                        <tr class="hover:bg-stone-50 transition border-b border-stone-50">
+                            <td class="px-4 lg:px-6 py-4 whitespace-nowrap text-xs lg:text-sm text-stone-500">${tx.date}</td>
+                            <td class="px-4 lg:px-6 py-4 whitespace-nowrap text-xs lg:text-sm font-bold text-stone-700">${tx.type}</td>
+                            <td class="px-4 lg:px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 lg:px-2.5 py-1 rounded-full text-[10px] lg:text-xs font-bold border ${statusClass}">${tx.status}</span>
+                            </td>
+                            <td class="px-4 lg:px-6 py-4 text-xs lg:text-sm text-stone-500 leading-relaxed max-w-[150px] lg:max-w-[200px] truncate" title="${tx.itemsStr}">${tx.itemsStr}</td>
+                            <td class="px-4 lg:px-6 py-4 text-xs lg:text-sm text-stone-500 leading-relaxed max-w-[100px] lg:max-w-[150px] truncate" title="${tx.notes}">${tx.notes}</td>
+                            <td class="px-4 lg:px-6 py-4 whitespace-nowrap text-sm lg:text-base font-bold text-stone-800">${formatRp(tx.total)}</td>
+                            <td class="px-4 lg:px-6 py-4 whitespace-nowrap text-center">${actionBtn}</td>
+                        </tr>
+                    `;
+                });
+            }
+            showLoader(false);
+        }
+
+        let currentRefundTx = null;
+
+        function openRefundModal(txId) {
+            currentRefundTx = financeDataCache.find(x => x.id === txId);
+            if (!currentRefundTx) return;
+
+            document.getElementById('ref-txid').innerText = currentRefundTx.id;
+            document.getElementById('ref-txdate').innerText = currentRefundTx.date;
+            document.getElementById('ref-reason').value = '';
+            document.getElementById('ref-is-full').checked = false;
+
+            const container = document.getElementById('ref-items-container');
+            container.innerHTML = '';
+
+            let canRefundAny = false;
+
+            currentRefundTx.items.forEach((item, index) => {
+                const maxRefundable = item.qty - item.refundedQty;
+                if (maxRefundable > 0) {
+                    canRefundAny = true;
+                    // Find actual product price from current products array (as a fallback since we didn't save snapshot price properly in this simple version, but assume it's the current price)
+                    const p = products.find(x => x.name === item.name);
+                    const price = p ? p.price : 0; // if product deleted, price 0
+                    
+                    container.innerHTML += `
+                        <div class="flex items-center gap-3 p-2 bg-stone-50 rounded border border-stone-200 ref-item-row">
+                            <input type="checkbox" id="ref-check-${index}" class="w-4 h-4 text-[#D97757] rounded border-stone-300 ref-item-check" data-name="${item.name}" data-price="${price}">
+                            <div class="flex-1">
+                                <label for="ref-check-${index}" class="font-bold text-sm text-stone-800">${item.name}</label>
+                                <div class="text-[10px] text-stone-500">Maks refund: ${maxRefundable} unit</div>
+                            </div>
+                            <input type="number" id="ref-qty-${index}" min="1" max="${maxRefundable}" value="${maxRefundable}" class="w-16 border border-stone-300 rounded px-2 py-1 text-xs focus:outline-none focus:border-[#D97757]">
+                            <div class="flex items-center gap-1">
+                                <input type="checkbox" id="ref-restock-${index}" class="w-3 h-3 text-green-600 rounded" checked title="Kembalikan ke stok">
+                                <span class="text-[10px] text-stone-500" title="Kembalikan ke stok">Restock?</span>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+
+            if (!canRefundAny) {
+                showToast('warning', 'Refund Selesai', 'Semua item pada transaksi ini telah direfund sebelumnya.');
+                return;
+            }
+
+            document.getElementById('modal-refund').classList.remove('hidden');
+            document.getElementById('modal-refund').classList.add('flex');
+        }
+
+        function closeRefundModal() {
+            document.getElementById('modal-refund').classList.add('hidden');
+            document.getElementById('modal-refund').classList.remove('flex');
+            currentRefundTx = null;
+        }
+
+        function toggleFullRefund() {
+            const isFull = document.getElementById('ref-is-full').checked;
+            const rows = document.querySelectorAll('.ref-item-row');
+            rows.forEach(row => {
+                const check = row.querySelector('.ref-item-check');
+                const qtyInput = row.querySelector('input[type="number"]');
+                if (isFull) {
+                    check.checked = true;
+                    check.disabled = true;
+                    qtyInput.value = qtyInput.max;
+                    qtyInput.disabled = true;
+                } else {
+                    check.disabled = false;
+                    qtyInput.disabled = false;
+                }
+            });
+        }
+
+        async function submitRefund() {
+            if (!currentRefundTx) return;
+
+            const isFullRefund = document.getElementById('ref-is-full').checked;
+            const reason = document.getElementById('ref-reason').value.trim();
+            if (!reason) { showToast('warning', 'Alasan Diperlukan', 'Harap isi alasan refund sebelum memproses.'); return; }
+
+            const refundItems = [];
+            let isValid = true;
+            let totalRefundQty = 0;
+
+            const rows = document.querySelectorAll('.ref-item-row');
+            rows.forEach(row => {
+                const check = row.querySelector('.ref-item-check');
+                if (check.checked) {
+                    const name = check.getAttribute('data-name');
+                    const price = parseInt(check.getAttribute('data-price'));
+                    const qtyInput = row.querySelector('input[type="number"]');
+                    const qty = parseInt(qtyInput.value);
+                    const restock = row.querySelector('input[type="checkbox"][id^="ref-restock"]').checked;
+
+                    if (qty > parseInt(qtyInput.max) || qty <= 0) isValid = false;
+
+                    refundItems.push({ name: name, qty: qty, price: price, restock: restock });
+                    totalRefundQty += qty;
+                }
+            });
+
+            if (!isValid) { showToast('error', 'Kuantitas Tidak Valid', 'Pastikan kuantitas refund benar dan tidak melebihi item tersedia.'); return; }
+            if (totalRefundQty === 0) { showToast('warning', 'Item Kosong', 'Pilih setidaknya satu item yang ingin direfund.'); return; }
+
+            showConfirmDialog('danger', 'Konfirmasi Refund', `Apakah Anda yakin ingin memproses refund untuk <strong>${totalRefundQty} item</strong>?<br>Tindakan ini tidak dapat dibatalkan.`, 'Ya, Proses Refund', 'Batal', async () => {
+                showLoader(true);
+                const res = await fetchAPI('processRefund', {
+                    txId: currentRefundTx.id,
+                    refundItems: refundItems,
+                    reason: reason,
+                    isFullRefund: isFullRefund
+                });
+
+                if (res && res.success) {
+                    showToast('success', 'Refund Berhasil', 'Proses refund telah selesai dan tercatat.');
+                    closeRefundModal();
+                    loadFinance();
+                    loadProducts(); // update stok terbaru di cache frontend
+                } else if (res && res.error) {
+                    showToast('error', 'Refund Gagal', res.error);
+                }
+                showLoader(false);
+            });
+        }
+
+        // ==========================================
+        // 4. AI CHAT LOGIC
+        // ==========================================
+        let chatHistory = [];
+        let isAILoading = false;
+
+        async function sendAI() {
+            if (isAILoading) return;
+            const input = document.getElementById('ai-input');
+            const msg = input.value.trim();
+            if (!msg) return;
+
+            isAILoading = true;
+            appendChat('user', msg);
+            chatHistory.push({ role: 'user', text: msg });
+            input.value = '';
+            
+            const chatBox = document.getElementById('chat-box');
+            const typingId = 'typing-' + Date.now();
+            
+            chatBox.innerHTML += `
+                <div id="${typingId}" class="flex gap-3 lg:gap-4">
+                    <div class="w-8 h-8 lg:w-10 lg:h-10 rounded-full bg-orange-100 flex items-center justify-center text-[#D97757] shrink-0"><i class="fas fa-robot"></i></div>
+                    <div class="bg-white p-3 lg:p-4 rounded-2xl rounded-tl-none shadow-sm text-stone-400 text-xs lg:text-sm border border-stone-100">
+                        <i class="fas fa-circle-notch fa-spin mr-2"></i> Sedang memproses analisis data...
+                    </div>
+                </div>
+            `;
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            try {
+                // Timeout di fetchAPI bisa ditambahkan, tapi kita gunakan await normal dengan flag
+                const res = await fetchAPI('askAI', { msg: msg, history: chatHistory.slice(-10) }); // Kirim maks 10 percakapan terakhir
+                
+                const typingEl = document.getElementById(typingId);
+                if (typingEl) typingEl.remove();
+                
+                if (res && res.reply) {
+                    appendChat('ai', res.reply);
+                    chatHistory.push({ role: 'model', text: res.reply });
+                } else {
+                    let errorMsg = res && res.error ? res.error : "Maaf, sepertinya saya tidak bisa mengakses layanan AI saat ini.";
+                    appendChat('ai', errorMsg);
+                }
+            } catch (err) {
+                const typingEl = document.getElementById(typingId);
+                if (typingEl) typingEl.remove();
+                appendChat('ai', 'Terjadi kesalahan sistem saat mencoba menghubungi asisten.');
+                console.error('AI Error:', err);
+            } finally {
+                isAILoading = false;
+            }
+        }
+
+        function appendChat(role, text) {
+            const box = document.getElementById('chat-box');
+            if (role === 'user') {
+                box.innerHTML += `
+                    <div class="flex gap-3 lg:gap-4 justify-end">
+                        <div class="bg-[#D97757] text-white p-3 lg:p-4 rounded-2xl rounded-tr-none shadow-sm max-w-[85%] lg:max-w-[80%] whitespace-pre-line leading-relaxed text-sm lg:text-base">${text}</div>
+                        <div class="w-8 h-8 lg:w-10 lg:h-10 rounded-full bg-stone-200 flex items-center justify-center text-stone-600 shrink-0"><i class="fas fa-user"></i></div>
+                    </div>
+                `;
+            } else {
+                let htmlContent = marked.parse(text);
+                let cleanHTML = DOMPurify.sanitize(htmlContent);
+                box.innerHTML += `
+                    <div class="flex gap-3 lg:gap-4">
+                        <div class="w-8 h-8 lg:w-10 lg:h-10 rounded-full bg-orange-100 flex items-center justify-center text-[#D97757] shrink-0 shadow-sm"><i class="fas fa-robot"></i></div>
+                        <div class="bg-white p-3 lg:p-4 rounded-2xl rounded-tl-none shadow-sm max-w-[85%] lg:max-w-[80%] text-stone-700 border border-stone-100 prose prose-stone prose-sm lg:prose-base max-w-none prose-p:my-1 prose-ul:my-1 prose-li:my-0 prose-table:my-2 prose-td:px-3 prose-td:py-1 prose-th:px-3 prose-th:py-2">${cleanHTML}</div>
+                    </div>
+                `;
+            }
+            box.scrollTop = box.scrollHeight;
+        }
+
+        // Start View Default
+        window.onload = () => {
+            if (sessionStorage.getItem('pos_token')) {
+                initApp();
+            } else {
+                showAuthView();
+            }
+        }
+        
+        // Handle Back-Forward Cache (BFCache)
+        window.addEventListener('pageshow', (event) => {
+            if (event.persisted) {
+                if (!sessionStorage.getItem('pos_token')) {
+                    showAuthView();
+                } else {
+                    // Coba re-validasi token ke backend secara diam-diam
+                    fetchAPI('getProducts', {}, true);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
